@@ -1,11 +1,15 @@
 #ifndef LOG_H
 #define LOG_H
 
+/* rather verbose and complex for what it does, but hey, its fun :-) */
+
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+/* all internal defines prefixed with __ */
 
 #define __LOG_ENV "LOG_LEVEL"
 #define __LOG_DEFAULT WARN
@@ -31,14 +35,17 @@ static char __executable_path[PATH_MAX] = { 0 };
 
 static char *executable_path()
 {
+    /* symlink that points to path of this executable */
     #define PATHSYM "/proc/self/exe"
 
+    /* we already cached this; no need to fetch again */
     if(__executable_path[0] != 0)
     {
         return __executable_path;
     }
 
     readlink(PATHSYM, __executable_path, PATH_MAX);
+    /* if fetching the symlink failed just use the name of the program */
     if(__executable_path[0] == 0)
     {
         return "ccobalt";
@@ -54,6 +61,7 @@ static enum __log_level get_log_level()
         return level; \
     }
 
+    /* need gotenv becasuse even after fetching logenv may be null */
     static char gotenv = 0;
     static char *logenv; 
     
@@ -63,6 +71,7 @@ static enum __log_level get_log_level()
         logenv = getenv(__LOG_ENV);
     }
 
+    /* no env var specified, use default */
     if(logenv == NULL)
     {
         return __LOG_DEFAULT; 
@@ -73,6 +82,7 @@ static enum __log_level get_log_level()
     __LEVEL_IF_EQ(__INFO_STR, INFO);
     __LEVEL_IF_EQ(__DEBUG_STR, DEBUG);
 
+    /* silently ignore incorrect values and just use default */
     return __LOG_DEFAULT;
 }
 
